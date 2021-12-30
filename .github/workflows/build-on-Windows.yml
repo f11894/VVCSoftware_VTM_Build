@@ -1,0 +1,42 @@
+name: Build on Windows
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        branch: [14.0]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Install dependencies
+      shell: cmd
+      run: |
+        C:\msys64\usr\bin\bash -lc "pacman -S mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-meson mingw-w64-x86_64-ninja --noconfirm"
+    - name: configure
+      shell: cmd
+      run: |
+        set MSYSTEM=MINGW64
+        set HOME=${{ github.workspace }}
+        git clone --depth 1 -b VTM-${{ matrix.branch }} https://vcgit.hhi.fraunhofer.de/jvet/VVCSoftware_VTM
+        C:\msys64\usr\bin\bash -lc "cd VVCSoftware_VTM && mkdir gcc_cmake && cd gcc_cmake && cmake .. -G Ninja  -DCMAKE_C_FLAGS='-flto' -DCMAKE_CXX_FLAGS='-flto' -DCMAKE_EXE_LINKER_FLAGS='-static -static-libgcc -flto -s' -DCMAKE_BUILD_TYPE=Release"
+    - name: make
+      shell: cmd
+      run: |
+        set MSYSTEM=MINGW64
+        set HOME=${{ github.workspace }}
+        C:\msys64\usr\bin\bash -lc "cd VVCSoftware_VTM/gcc_cmake && ninja"
+        for /r ".\VVCSoftware_VTM\bin\ninja" %%i in (*.exe) do copy "%%i" .\
+        copy /y VVCSoftware_VTM\COPYING COPYING
+    - name: Upload result
+      uses: actions/upload-artifact@v2
+      with:
+        name: VVCSoftware_VTM_v${{ matrix.branch }}
+        path: |
+          *.exe
+          COPYING
+          VVCSoftware_VTM/cfg
