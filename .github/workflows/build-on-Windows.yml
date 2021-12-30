@@ -32,6 +32,7 @@ jobs:
         C:\msys64\usr\bin\bash -lc "cd VVCSoftware_VTM/gcc_cmake && ninja"
         for /r ".\VVCSoftware_VTM\bin\ninja" %%i in (*.exe) do copy "%%i" .\
         copy /y VVCSoftware_VTM\COPYING COPYING
+        xcopy /e /i VVCSoftware_VTM/cfg cfg
     - name: Upload result
       uses: actions/upload-artifact@v2
       with:
@@ -39,4 +40,4 @@ jobs:
         path: |
           *.exe
           COPYING
-          VVCSoftware_VTM/cfg
+          cfg
