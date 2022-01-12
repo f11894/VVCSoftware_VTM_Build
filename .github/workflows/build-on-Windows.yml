@@ -7,7 +7,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        branch: ['14.0']
+        branch: ['14.1', '14.2', '15.0']
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -24,7 +24,7 @@ jobs:
         set HOME=${{ github.workspace }}
         set CFLAGS=-flto -v
         set CXXFLAGS=%CFLAGS%
-        set LDFLAGS=-static -static-libgcc -flto -s
+        set LDFLAGS=-static -static-libgcc -static-libstdc++ -flto -s
         git clone --depth 1 -b VTM-${{ matrix.branch }} https://vcgit.hhi.fraunhofer.de/jvet/VVCSoftware_VTM
         C:\msys64\usr\bin\bash -lc "cd VVCSoftware_VTM && mkdir gcc_cmake && cd gcc_cmake && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release"
         C:\msys64\usr\bin\bash -lc "cd VVCSoftware_VTM/gcc_cmake && ninja"
