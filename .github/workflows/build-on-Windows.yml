@@ -31,11 +31,41 @@ jobs:
         for /r ".\VVCSoftware_VTM\bin\ninja" %%i in (*.exe) do copy "%%i" .\
         copy /y VVCSoftware_VTM\COPYING COPYING
         xcopy /e /i VVCSoftware_VTM\cfg cfg
+        7z a "VVCSoftware_VTM_v${{ matrix.branch }}.7z" *.exe COPYING cfg 
     - name: Upload result
       uses: actions/upload-artifact@v2
       with:
-        name: VVCSoftware_VTM_v${{ matrix.branch }}
+        name: VVCSoftware_VTM
         path: |
-          *.exe
-          COPYING
-          cfg
+          VVCSoftware_VTM_v*.7z
+
+  create_release:
+      name: Create release
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+    
+      - uses: actions/download-artifact@v2
+        with:
+          name: VVCSoftware_VTM
+          path: artifacts
+    
+      - name: Get Date
+        id: get_date
+        run: |
+          DATE_TIME=`date +'%Y-%m-%d-%H-%M-%S'`
+          echo "::set-output name=DATE_TIME::${DATE_TIME}"        
+      # https://github.com/Mr-Ojii/L-SMASH-Works-Auto-Builds
+      - name: Create a Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_NAME=Build-${{ steps.get_date.outputs.DATE_TIME }}
+          TAG_NAME=build-${{ steps.get_date.outputs.DATE_TIME }}
+          assets=()
+          for asset in ${{ github.workspace }}/artifacts/*.7z; do
+            assets+=("-a" "$asset")
+          done
+          hub release create "${assets[@]}" -m "$RELEASE_NAME" "$TAG_NAME"
