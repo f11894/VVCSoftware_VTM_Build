@@ -7,7 +7,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        branch: ['19.1''19.2']
+        branch: ['19.1', '19.2']
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
